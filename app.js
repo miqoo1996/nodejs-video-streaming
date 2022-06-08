@@ -11,7 +11,7 @@ function getFileFromRequest(req)
     return `../storage-${req.query.type.toUpperCase()}/${req.query.file}`
 }
 
-function videStreamingMiddleware(req, res, next, checkRang = true) {
+function videoStreamingMiddleware(req, res, next, checkRang = true) {
     if (!req.query.type || !req.query.file) {
         res.status(400).send("You don't have access to this page (Access Denied - 1)");
         return false;
@@ -36,7 +36,7 @@ function videStreamingMiddleware(req, res, next, checkRang = true) {
 }
 
 // Open this for test purpose
-app.get("/vs", (req, res, next) => videStreamingMiddleware(req, res, next, false), function (req, res) {
+app.get("/vs", (req, res, next) => videoStreamingMiddleware(req, res, next, false), function (req, res) {
     const {file, type} = req.query;
     const fileParts = file.split('.');
     const fileExt = fileParts[fileParts.length - 1];
@@ -48,7 +48,7 @@ app.get("/vs", (req, res, next) => videStreamingMiddleware(req, res, next, false
     })
 });
 
-app.get("/vs/video-stream", videStreamingMiddleware, function (req, res) {
+app.get("/vs/video-stream", videoStreamingMiddleware, function (req, res) {
     const videoPath = getFileFromRequest(req);
     const range = req.headers.range;
     const videoSize = fs.statSync(videoPath).size;
