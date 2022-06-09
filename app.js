@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 const fs = require("fs");
+const cors = require('cors');
+
+app.use(cors());
 
 app.set('view engine', 'ejs')
 
@@ -49,29 +52,35 @@ app.get("/vs", (req, res, next) => videoStreamingMiddleware(req, res, next, fals
 });
 
 app.get("/vs/video-stream", videoStreamingMiddleware, function (req, res) {
-    const videoPath = getFileFromRequest(req);
-    const range = req.headers.range;
-    const videoSize = fs.statSync(videoPath).size;
-    const CHUNK_SIZE = 10 ** 6;
-    const start = Number(range ? range.replace(/\D/g, "") : "");
-    const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
-    const contentLength = end - start + 1;
+    try {
+        const videoPath = getFileFromRequest(req);
+        const range = req.headers.range;
+        const videoSize = fs.statSync(videoPath).size;
+        const CHUNK_SIZE = 10 ** 6;
+        const start = Number(range ? range.replace(/\D/g, "") : "");
+        const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+        const contentLength = end - start + 1;
 
-    const fileParts = req.query.file.split('.');
-    const fileExt = fileParts[fileParts.length - 1];
+        const fileParts = req.query.file.split('.');
+        const fileExt = fileParts[fileParts.length - 1];
 
-    const headers = {
-        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": contentLength,
-        "Content-Type": "video/" + fileExt,
-    };
+        const headers = {
+            "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+            "Accept-Ranges": "bytes",
+            "Content-Length": contentLength,
+            "Content-Type": "video/" + fileExt,
+        };
 
-    res.writeHead(206, headers);
+        res.writeHead(206, headers);
 
-    const videoStream = fs.createReadStream(videoPath, { start, end });
+        const videoStream = fs.createReadStream(videoPath, { start, end });
 
-    videoStream.pipe(res);
+        videoStream.pipe(res);
+    } catch (e) {
+        fs.writeFile('error-log.txt', JSON.stringify(e), function (err) {
+            // if (err) throw err;
+        });
+    }
 });
 
 app.listen(3000, function () {
