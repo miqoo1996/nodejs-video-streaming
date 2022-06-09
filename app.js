@@ -80,6 +80,8 @@ app.get("/vs/video-stream", videoStreamingMiddleware, function (req, res) {
         fs.writeFile('error-log.txt', JSON.stringify(e), function (err) {
             // if (err) throw err;
         });
+
+        res.writeHead(400, "Something went wrong.");
     }
 });
 
